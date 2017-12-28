@@ -3,8 +3,9 @@ from flask import Blueprint, request, render_template, session, redirect, url_fo
 from src.models.alerts.alert import Alert
 from src.models.items.item import Item
 import src.models.users.decorators as user_decorators
+from src.threads import  start_thread
 
-__author__ = 'jslvtr'
+__author__ = 'ennvault'
 
 alert_blueprint = Blueprint('alerts', __name__)
 
@@ -22,7 +23,7 @@ def create_alert():
 
         alert = Alert(session['email'], price_limit, item._id)
         alert.load_item_price()  # This already saves to MongoDB
-
+        return redirect(url_for('users.user_alerts'))
     # What happens if it's a GET request
     return render_template("alerts/new_alert.jinja2")  # Send the user an error if their login was invalid
 
@@ -32,11 +33,10 @@ def create_alert():
 def edit_alert(alert_id):
     if request.method == 'POST':
         price_limit = float(request.form['price_limit'])
-
         alert = Alert.find_by_id(alert_id)
         alert.price_limit = price_limit
         alert.load_item_price()  # This already saves to MongoDB
-
+        return redirect(url_for('users.user_alerts'))
     # What happens if it's a GET request
     return render_template("alerts/edit_alert.jinja2", alert=Alert.find_by_id(alert_id))  # Send the user an error if their login was invalid
 
@@ -44,6 +44,8 @@ def edit_alert(alert_id):
 @alert_blueprint.route('/deactivate/<string:alert_id>')
 @user_decorators.requires_login
 def deactivate_alert(alert_id):
+    alert = Alert.find_by_id(alert_id)
+    alert.email_alert_off()
     Alert.find_by_id(alert_id).deactivate()
     return redirect(url_for('users.user_alerts'))
 
@@ -54,10 +56,25 @@ def activate_alert(alert_id):
     Alert.find_by_id(alert_id).activate()
     return redirect(url_for('users.user_alerts'))
 
+@alert_blueprint.route('/toggle_on/<string:alert_id>')
+@user_decorators.requires_login
+def toggle_email_alert_on(alert_id):
+    start_thread(alert_id)
+    return redirect(url_for('users.user_alerts'))
+
+@alert_blueprint.route('/toggle_off/<string:alert_id>')
+@user_decorators.requires_login
+def toggle_email_alert_off(alert_id):
+    alert = Alert.find_by_id(alert_id)
+    alert.email_alert_off()
+    return redirect(url_for('users.user_alerts'))
+
 
 @alert_blueprint.route('/delete/<string:alert_id>')
 @user_decorators.requires_login
 def delete_alert(alert_id):
+    alert = Alert.find_by_id(alert_id)
+    alert.email_alert_off()
     Alert.find_by_id(alert_id).delete()
     return redirect(url_for('users.user_alerts'))
 

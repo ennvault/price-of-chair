@@ -2,10 +2,14 @@
 {% block content %}
     <div class="page-header">
         <h1>Store
-            <small>{{ store.name }}</small>
+            <small>info</small>
         </h1>
     </div>
-    <p>All URLs in this store should start with <strong>{{ store.url_prefix }}</strong></p>
+    <H1>{{ store.name }}</H1>
+    <p>All URLs in this store should start with <strong> : {{ store.url_prefix }}</strong></p>
+    <p>Store Item Tag name :<strong>{{ store.tag_name }}</strong></p>
+    <p>Store Item Search Query :<strong>{{ store.query }}</strong></p>
+
     {% if session['email'] in config.ADMINS %}
         <div class="panel panel-default">
             <div class="panel-body">
